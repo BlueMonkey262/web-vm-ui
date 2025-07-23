@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="VM-viewer.css" />
+</head>
+<body>
+<div id="topbar">
+    <div id="controls">
+        <input id="host" value="localhost" placeholder="Host">
+        <input id="port" value="5900" placeholder="Port">
+        <input id="password" type="password" placeholder="Password">
+        <button id="connectButton">Start Connection</button>
+        <button id="sendCtrlAltDel">Send Ctrl+Alt+Del</button>
+    </div>
+</div>
+
+
+<div id="spice-area">
+  <div id="spice-screen"></div>
+  <div id="message-div" class="spice-message" style="display: none;"></div>
+  <div id="debug-div"></div>
+</div>
+
+<!-- Your working external SPICE client -->
+<script type="module" src="spice-client.js" crossorigin="anonymous"></script>
+
+</body>
+</html>
