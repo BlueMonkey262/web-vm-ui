@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import libvirt
+import xml.etree.ElementTree as ET
 
 app = FastAPI()
 
@@ -43,10 +44,25 @@ def list_vms():
     vms = []
     for domain in domains:
         state, _ = domain.state()
-        vms.append({
+        vm_info = {
             "name": domain.name(),
-            "status": STATE_NAMES.get(state, "Unknown")
-        })
+            "status": STATE_NAMES.get(state, "Unknown"),
+            "port": None
+        }
+
+        # Parse XML to find spice port
+        xml = domain.XMLDesc()
+        try:
+            root = ET.fromstring(xml)
+            graphics = root.find(".//graphics[@type='spice']")
+            if graphics is not None:
+                port = graphics.get('port')
+                if port and port != "-1":
+                    vm_info["port"] = int(port)
+        except ET.ParseError:
+            pass  # ignore XML parse errors here
+
+        vms.append(vm_info)
     conn.close()
     return {"vms": vms}
 
@@ -72,7 +88,6 @@ def start_vm(vm_name: str):
         conn.close()
         raise HTTPException(status_code=500, detail=f"Failed to start VM '{vm_name}': {e}")
 @app.post("/vms/stop/{vm_name}")
-
 def stop_vm(vm_name: str):
     conn = get_libvirt_conn()
     try:
@@ -94,3 +109,24 @@ def stop_vm(vm_name: str):
         conn.close()
         raise HTTPException(status_code=500, detail=f"Failed to stop VM '{vm_name}': {e}")
 
+@app.post("/vms/kill/{vm_name}")
+def kill_vm(vm_name: str):
+    conn = get_libvirt_conn()
+    try:
+        domain = conn.lookupByName(vm_name)
+    except libvirt.libvirtError:
+        raise HTTPException(status_code=404, detail=f"VM '{vm_name}' not found")
+
+    state, _ = domain.state()
+    # If already shut off or shutdown, no action needed
+    if state in (5, 4):  # 5 = Shut off, 4 = Shutdown
+        conn.close()
+        return {"message": f"VM '{vm_name}' is already stopped"}
+
+    try:
+        domain.destroy()  # Graceful shutdown
+        conn.close()
+        return {"message": f"VM '{vm_name}' shutdown initiated successfully"}
+    except libvirt.libvirtError as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Failed to stop VM '{vm_name}': {e}")

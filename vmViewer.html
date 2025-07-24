@@ -4,18 +4,34 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link rel="stylesheet" type="text/css" href="VM-viewer.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
+
+<script>
+    function enterFullscreen() {
+        const viewer = document.getElementById("spice-area");
+        if (viewer.requestFullscreen) {
+            viewer.requestFullscreen();
+        } else if (viewer.webkitRequestFullscreen) {
+            viewer.webkitRequestFullscreen();
+        } else if (viewer.msRequestFullscreen) {
+            viewer.msRequestFullscreen();
+        }
+    }
+</script>
+
 <div id="topbar">
     <div id="controls">
+        <a href="main_page.html"><button id="home" class="material-icons" title="Home">home</button></a>
         <input id="host" value="localhost" placeholder="Host">
-        <input id="port" value="5900" placeholder="Port">
+        <input id="port" placeholder="Port">
         <input id="password" type="password" placeholder="Password">
         <button id="connectButton">Start Connection</button>
         <button id="sendCtrlAltDel">Send Ctrl+Alt+Del</button>
+        <button onclick="enterFullscreen()">Fullscreen</button>
     </div>
 </div>
-
 
 <div id="spice-area">
   <div id="spice-screen"></div>

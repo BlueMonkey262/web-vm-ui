@@ -99,6 +99,8 @@ window.addEventListener('spice-port-event', function(event) {
 document.getElementById('connectButton').onclick = connect;
 document.getElementById('sendCtrlAltDel').addEventListener('click', function(){ SpiceHtml5.sendCtrlAltDel(sc); });
 
+const params = new URLSearchParams(window.location.search);
 
-const vmPort = 5900;
+const vmPort = params.get('port');
 document.getElementById("port").value = vmPort;
+
