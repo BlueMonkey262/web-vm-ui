@@ -8,8 +8,18 @@
 </head>
 <body>
 
-<h1>Virtual Machines</h1>
-<div id="vm-list">Loading VMs...</div>
+<h1 id="title">VM Manager</h1>
+<div id="vm-list" class="vm-container">Loading VMs...</div>
+
+<div id="confirm-overlay" class="hidden">
+    <div class="confirm-modal">
+        <p>Are you sure you want to Force Off this VM?</p>
+        <button id="confirm-yes">Yes, Force Off</button>
+        <button id="confirm-no">Cancel</button>
+    </div>
+</div>
+
+
 
 <script src="main_page.js"></script>
 </body>

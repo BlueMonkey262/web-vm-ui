@@ -1,5 +1,3 @@
-const API_BASE = 'http://localhost:8000';
-
 const vmListDiv = document.getElementById('vm-list');
 
 async function fetchVMs() {
@@ -18,6 +16,7 @@ async function startVM(name) {
     try {
         await fetch(`${API_BASE}/vms/start/${encodeURIComponent(name)}`, { method: 'POST' });
         loadVMs();
+        setTimeout(updateVMStatuses, 1000)
     } catch (err) {
         alert(`Failed to start VM: ${err.message}`);
     }
@@ -36,7 +35,7 @@ function openViewer(name, port) {
     const url = new URL('vmViewer.html', window.location.href);
     url.searchParams.set('name', name);
     url.searchParams.set('port', port);
-    window.open(url.toString());
+    window.location.href = url.toString();
 }
 
 function createVMElement(vm) {
@@ -44,7 +43,7 @@ function createVMElement(vm) {
     container.className = 'vm-container';
 
     container.innerHTML = `
-    <hr>
+<div class="vm-box">
 <div class="vm-header">
   <h2>${vm.name}</h2>
 </div>
@@ -55,12 +54,12 @@ function createVMElement(vm) {
   <button class="stop-styling">Stop</button>
   <button class="enter-viewer">View</button>
   <button class="more-styling" onclick="toggleExtra(this)">Other</button>
-  <div class="extra-buttons hidden">
-    <button class="force-off">Force-Off</button>
-    <button class="reboot-hard">Hard Reboot</button>
+  <div class="extra-buttons">
+    <button class="force-off" onclick="killVM(this)">Force Off</button>
+    <button class="reboot-hard">???</button>
   </div>
 </div>
-
+</div>
 
   `;
 

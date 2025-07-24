@@ -1,5 +1,7 @@
 import * as SpiceHtml5 from './src/main.js';
 
+
+
 var host = null, port = null;
 var sc;
 
@@ -8,16 +10,14 @@ function spice_error(e)
     disconnect();
 }
 
-function connect()
-{
-    var host, port, password, scheme = "ws://", uri;
+function connect() {
+    var host = document.getElementById("host").value;
+    var port = document.getElementById("port").value;
+    var password = document.getElementById("password").value;
+    var scheme = "ws://";
+    var uri;
 
-    host = document.getElementById("host").value;
-    port = document.getElementById("port").value;
-    password = document.getElementById("password").value;
-
-
-    if ((!host) || (!port)) {
+    if (!host || !port) {
         console.log("must set host and port");
         return;
     }
@@ -28,33 +28,47 @@ function connect()
 
     uri = scheme + host + ":" + port;
 
-    document.getElementById('connectButton').innerHTML = "Stop Connection";
-    document.getElementById('connectButton').onclick = disconnect;
+    const btn = document.getElementById('connectButton');
 
-    try
-    {
-        sc = new SpiceHtml5.SpiceMainConn({uri: uri, screen_id: "spice-screen", dump_id: "debug-div",
-            message_id: "message-div", password: password, onerror: spice_error, onagent: agent_connected });
-    }
-    catch (e)
-    {
+    btn.innerHTML = "Stop Connection";
+    btn.classList.add("connectBtn", "stop");
+    btn.classList.remove("start");   // Remove start class to avoid conflicts
+    btn.onclick = disconnect;
+
+    try {
+        sc = new SpiceHtml5.SpiceMainConn({
+            uri: uri,
+            screen_id: "spice-screen",
+            dump_id: "debug-div",
+            message_id: "message-div",
+            password: password,
+            onerror: spice_error,
+            onagent: agent_connected
+        });
+    } catch (e) {
         alert(e.toString());
         disconnect();
     }
-
 }
 
-function disconnect()
-{
+
+function disconnect() {
+    const btn = document.getElementById("connectButton");
+
+    btn.classList.remove("stop");
+    btn.classList.add("connectBtn", "start");
+    btn.classList.remove("stop");  // just in case
+
     console.log(">> disconnect");
     if (sc) {
         sc.stop();
     }
-    document.getElementById('connectButton').innerHTML = "Start Connection";
-    document.getElementById('connectButton').onclick = connect;
-    if (window.File && window.FileReader && window.FileList && window.Blob)
-    {
-        var spice_xfer_area = document.getElementById('spice-xfer-area');
+
+    btn.innerHTML = "Start Connection";
+    btn.onclick = connect;
+
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
+        const spice_xfer_area = document.getElementById('spice-xfer-area');
         if (spice_xfer_area != null) {
             document.getElementById('spice-area').removeChild(spice_xfer_area);
         }
@@ -63,6 +77,7 @@ function disconnect()
     }
     console.log("<< disconnect");
 }
+
 
 function agent_connected(sc)
 {
@@ -104,3 +119,4 @@ const params = new URLSearchParams(window.location.search);
 const vmPort = params.get('port');
 document.getElementById("port").value = vmPort;
 
+connect()

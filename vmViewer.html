@@ -2,9 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>VM Viewer</title>
     <link rel="stylesheet" type="text/css" href="VM-viewer.css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script>
+        function openPassword() {
+            const box = document.getElementById("password");
+            box.classList.toggle("active");
+        }
+
+    </script>
 </head>
 <body>
 
@@ -24,12 +31,13 @@
 <div id="topbar">
     <div id="controls">
         <a href="main_page.html"><button id="home" class="material-icons" title="Home">home</button></a>
-        <input id="host" value="localhost" placeholder="Host">
-        <input id="port" placeholder="Port">
-        <input id="password" type="password" placeholder="Password">
-        <button id="connectButton">Start Connection</button>
+        <input class = "hidden" id="host" value="192.168.50.39" placeholder="Host">
+        <input class = "hidden" id="port" placeholder="Port">
+        <button class="start connectBtn" id="connectButton">Start Connection</button>
         <button id="sendCtrlAltDel">Send Ctrl+Alt+Del</button>
-        <button onclick="enterFullscreen()">Fullscreen</button>
+        <button class="enterfullscreen" onclick="enterFullscreen()">Fullscreen</button>
+        <button class="openPassword" onclick="openPassword()">Password</button>
+        <input  id="password" type="password" placeholder="Password: Optional">
     </div>
 </div>
 
@@ -39,7 +47,7 @@
   <div id="debug-div"></div>
 </div>
 
-<!-- Your working external SPICE client -->
+
 <script type="module" src="spice-client.js" crossorigin="anonymous"></script>
 
 </body>

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import libvirt
 import xml.etree.ElementTree as ET
 
+
 app = FastAPI()
 
 # Enable CORS to allow frontend access
@@ -41,6 +42,7 @@ def get_libvirt_conn():
 def list_vms():
     conn = get_libvirt_conn()
     domains = conn.listAllDomains()
+
     vms = []
     for domain in domains:
         state, _ = domain.state()
@@ -65,6 +67,8 @@ def list_vms():
         vms.append(vm_info)
     conn.close()
     return {"vms": vms}
+
+
 
 
 @app.post("/vms/start/{vm_name}")

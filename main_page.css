@@ -1,15 +1,18 @@
 :root {
-    --bg-dark: #323538;
-    --bg-light: #4c5359;
-    --text-light: #e0e0e0;
-    --accent: #669bbc; /* try swapping for teal, cyan, amber, etc. */
+    --activeBackground: #272c31;
+    --activeForeground: #363a40;
+    --activeBlend: #fcfcfc;
+    --inactiveBackground: #202428;
+    --inactiveForeground: #a1a9b1;
+    --inactiveBlend: #a1a9b1;
+    --DecorationFocus: #51585e;
 }
 
 body {
-    font-family: sans-serif;
-    background: #111;
+    background: var(--activeBackground);
     color: #eee;
     padding: 20px;
+    font-family: Orbitron, sans-serif;
 }
 
 h1 {
@@ -40,7 +43,10 @@ button {
 .stop-styling {
     background-color: #f44336;
     color: white;
-    /* Removed border-right:0; (not needed without adjacent borders) */
+}
+
+.other-styling {
+    background-color: var(--DecorationFocus);
 }
 
 .enter-viewer {
@@ -49,6 +55,9 @@ button {
 }
 
 .vm-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(23em, 1fr));
+    gap: 16px;
     margin-bottom: 30px;
 }
 
@@ -69,22 +78,25 @@ button {
     display: flex;
     gap: 8px;
     align-items: center;
-    flex-wrap: nowrap; /* Prevent buttons from wrapping to next line */
+    flex-wrap: wrap; /* Allow wrapping */
 }
 
+
+/* Here is the fixed .extra-buttons */
 .extra-buttons {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
     display: flex;
     gap: 8px;
-    opacity: 1;
-    overflow: hidden;
-    transition: opacity 0.3s ease, width 0.3s ease;
+    white-space: normal; /* Let buttons wrap or behave normally */
 }
 
-.hidden {
-    opacity: 0;
-    pointer-events: none;
-    width: 0;
-    overflow: hidden;
+
+.extra-buttons.show {
+    max-height: 200px; /* enough to fit buttons */
+    opacity: 1;
 }
 
 .force-off {
@@ -94,5 +106,93 @@ button {
 
 .reboot-hard {
     background-color: #9c27b0;
+    color: white;
+}
+
+.vm-box {
+    background-color: var(--activeForeground);
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    /* These two are important for glowing border */
+    position: relative;
+    z-index: 0; /* ensure the glow is behind */
+    overflow: visible; /* allow glow to extend outside */
+}
+
+
+.vm-box.running {
+    border: 2px solid #00ff80;
+    box-shadow: 0 0 10px 2px rgba(0, 255, 128, 0.6);
+    animation: glowBorder 1.5s ease-in-out infinite;
+}
+
+
+.hidden {
+    display: none !important;
+}
+
+#confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* dark translucent */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* make sure it's above everything */
+}
+
+/* Hidden by default */
+#confirm-overlay.hidden {
+    display: none;
+}
+
+/* The confirmation box */
+.confirm-modal {
+    background: var(--activeForeground);
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    color: white;
+    max-width: 90%;
+    max-height: 80%;
+    text-align: center;
+    backdrop-filter: blur(8px); /* subtle blur behind the modal itself */
+}
+
+/* Blur the page content when the overlay is visible */
+body.blur-active > *:not(#confirm-overlay) {
+    filter: blur(6px);
+    user-select: none;
+    pointer-events: none;
+    transition: filter 0.3s ease;
+}
+
+#title {
+    text-align: center;
+    font-family: 'Orbitron';
+    font-size: 2em;
+}
+
+.vm-box.running {
+
+}
+
+@keyframes glowBorder {
+    0%, 100% {
+        box-shadow: 0 0 10px 2px rgba(0, 255, 128, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 16px 4px rgba(0, 255, 128, 0.8);
+    }
+}
+
+#confirm-yes {
+    background-color: #f44336;
     color: white;
 }
