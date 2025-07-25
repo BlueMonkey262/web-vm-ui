@@ -134,3 +134,5 @@ def kill_vm(vm_name: str):
     except libvirt.libvirtError as e:
         conn.close()
         raise HTTPException(status_code=500, detail=f"Failed to stop VM '{vm_name}': {e}")
+
+

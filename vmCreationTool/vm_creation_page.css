@@ -1,0 +1,57 @@
+:root {
+    --activeBackground: #272c31;
+    --activeForeground: #363a40;
+    --activeBlend: #fcfcfc;
+    --inactiveBackground: #202428;
+    --inactiveForeground: #a1a9b1;
+    --inactiveBlend: #a1a9b1;
+    --DecorationFocus: #51585e;
+    --textBox: #232629;
+}
+
+.tab-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.tab-button {
+    padding: 8px 16px;
+    border: none;
+    background: var(--inactiveForeground);
+    color: white;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+}
+
+.tab-button.active {
+    background: var(--activeForeground);
+    font-weight: bold;
+}
+
+.tab-content {
+    display: block;
+    padding: 16px;
+    border: none;
+    background-color: #ffffff;
+    border-radius: 0 6px 6px 6px;
+    height: 55em;
+    width: 80%;
+}
+
+.hidden {
+    display: none;
+}
+
+#xmlInput {
+    width: 60%;
+    height: 80%;
+    font-family: monospace;
+    font-size: 14px;
+    background-color: var(--textBox);
+    color: #d4d4d4;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    resize: vertical;
+}
