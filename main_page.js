@@ -5,6 +5,7 @@ async function fetchVMs() {
         const res = await fetch(`${API_BASE}/vms`);
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
+        attachHoverEvents();
         return data.vms;
     } catch (err) {
         vmListDiv.textContent = `Failed to load VMs: ${err.message}`;
@@ -53,10 +54,11 @@ function createVMElement(vm) {
   <button class="start-styling">Start</button>
   <button class="stop-styling">Stop</button>
   <button class="enter-viewer">View</button>
-  <button class="more-styling" onclick="toggleExtra(this)">Other</button>
+  <button class="more-styling hidden" onclick="toggleExtra(this)">Other</button>
+  
   <div class="extra-buttons">
     <button class="force-off" onclick="killVM(this)">Force Off</button>
-    <button class="reboot-hard">???</button>
+    <button class="reboot" onclick="restartVM(this)">Reboot</button>
   </div>
 </div>
 </div>
@@ -65,6 +67,7 @@ function createVMElement(vm) {
 
     container.querySelector('.start-styling').onclick = () => startVM(vm.name);
     container.querySelector('.stop-styling').onclick = () => stopVM(vm.name);
+    container.querySelector('.reboot').onclick = () => restartVM(vm.name);
     container.querySelector('.enter-viewer').onclick = () => openViewer(vm.name, vm.port);
 
 
@@ -104,3 +107,4 @@ window.addEventListener("load", () => {
     }
 });
 
+setInterval(fetchVMs, 3000);

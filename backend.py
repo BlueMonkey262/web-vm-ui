@@ -136,3 +136,26 @@ def kill_vm(vm_name: str):
         raise HTTPException(status_code=500, detail=f"Failed to stop VM '{vm_name}': {e}")
 
 
+@app.post("/vms/reboot/{vm_name}")
+def reboot_vm(vm_name: str):
+    conn = get_libvirt_conn()
+    try:
+        domain = conn.lookupByName(vm_name)
+    except libvirt.libvirtError:
+        raise HTTPException(status_code=404, detail=f"VM '{vm_name}' not found")
+
+    state, _ = domain.state()
+    # If already shut off or shutdown, no action needed
+    if state in (5, 4):  # 5 = Shut off, 4 = Shutdown
+        conn.close()
+        return {"message": f"VM '{vm_name}' is already stopped"}
+
+    try:
+        domain.reboot()  # Graceful shutdown
+        conn.close()
+        return {"message": f"VM '{vm_name}' shutdown initiated successfully"}
+    except libvirt.libvirtError as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Failed to stop VM '{vm_name}': {e}")
+
+

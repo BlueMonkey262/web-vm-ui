@@ -1,6 +1,6 @@
 // Toggle visibility of extra options under each VM box
 const API_BASE = "http://192.168.50.39:8000";
-function toggleExtra(button) {
+function toggleExtra(button, showorhide) {
     console.log('toggleExtra called');
     const container = button.parentElement;
     const extra = container.querySelector('.extra-buttons');
@@ -8,7 +8,12 @@ function toggleExtra(button) {
         console.warn('No .extra-buttons element found');
         return;
     }
-    extra.classList.toggle('show');
+    if (showorhide == "show") {
+        extra.classList.add("show")
+    }
+    if (showorhide == "hide") {
+        extra.classList.remove('show');
+    }
 }
 
 async function killVM(button) {
@@ -115,5 +120,34 @@ function updateVMStatuses() {
 
 
 // Call it once after the VMs are inserted
-setTimeout(updateVMStatuses, 1000);
 
+function handleHoverEnter(e) {
+    console.log("Hovered on:", e.currentTarget);
+    toggleExtra(e.currentTarget, "show");
+}
+
+function handleHoverLeave(e) {
+    console.log("Unhovered:", e.currentTarget);
+    toggleExtra(e.currentTarget, "hide");
+}
+
+// Call this after you create or update the vm-box elements
+function attachHoverEvents() {
+    const boxes = document.querySelectorAll(".vm-box");
+    boxes.forEach(box => {
+        box.addEventListener("mouseenter", handleHoverEnter);
+        box.addEventListener("mouseleave", handleHoverLeave);
+    });
+}
+
+async function restartVM(name) {
+    try {
+        await fetch(`${API_BASE}/vms/reboot/${encodeURIComponent(name)}`, { method: 'POST' });
+        loadVMs();
+    } catch (err) {
+        alert(`Failed to reboot VM: ${err.message}`);
+    }
+}
+
+setTimeout(attachHoverEvents, 1000);
+setInterval(updateVMStatuses, 1000);
