@@ -51,24 +51,47 @@ def list_vms():
         vm_info = {
             "name": domain.name(),
             "status": STATE_NAMES.get(state, "Unknown"),
-            "port": None
+            "port": None,
+            "memory_mb": None,
+            "vcpus": None
         }
 
-        # Parse XML to find spice port
+        # Parse XML
         xml = domain.XMLDesc()
         try:
             root = ET.fromstring(xml)
+
+            # SPICE port
             graphics = root.find(".//graphics[@type='spice']")
             if graphics is not None:
-                port = graphics.get('port')
+                port = graphics.get("port")
                 if port and port != "-1":
                     vm_info["port"] = int(port)
+
+            # Memory (convert to MB if needed)
+            mem_elem = root.find("memory")
+            if mem_elem is not None:
+                mem = int(mem_elem.text)
+                unit = mem_elem.get("unit", "KiB")
+                if unit == "KiB":
+                    mem = mem // 1024
+                elif unit == "GiB":
+                    mem = mem * 1024
+                # else assume MB
+                vm_info["memory_mb"] = mem
+
+            # vCPUs
+            vcpu_elem = root.find("vcpu")
+            if vcpu_elem is not None:
+                vm_info["vcpus"] = int(vcpu_elem.text)
+
         except ET.ParseError:
-            pass  # ignore XML parse errors here
+            pass  # ignore XML parse errors
 
         vms.append(vm_info)
     conn.close()
     return {"vms": vms}
+
 
 class VMEditRequest(BaseModel):
     memory_mb: int = None  # optional
