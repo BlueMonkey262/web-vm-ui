@@ -1,5 +1,4 @@
 const vmListDiv = document.getElementById('vm-list');
-
 async function fetchVMs() {
     try {
         const res = await fetch(`${API_BASE}/vms`);

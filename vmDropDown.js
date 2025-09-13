@@ -1,5 +1,5 @@
 // Toggle visibility of extra options under each VM box
-const API_BASE = "http://192.168.50.39:8000";
+const API_BASE = "http://192.168.50.193:8000";
 function toggleExtra(button, showorhide) {
     console.log('toggleExtra called');
     const container = button.parentElement;
