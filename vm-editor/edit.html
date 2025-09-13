@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit VM</title>
+</head>
+<body>
+<h1>Edit VM</h1>
+
+
+<form id="editForm">
+    <label>
+        Memory (MB):
+        <input type="number" name="memory_mb" required>
+    </label><br>
+
+    <label>
+        vCPUs:
+        <input type="number" name="vcpus" required>
+    </label><br>
+
+    <button type="submit">Save Changes</button>
+</form>
+
+<div id="result" style="margin-top: 10px;"></div>
+<script src="vm_editor.js"></script>
+</body>
+</html>

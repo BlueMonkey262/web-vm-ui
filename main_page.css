@@ -207,3 +207,8 @@ body.blur-active > *:not(#confirm-overlay) {
     background-color: #f44336;
     color: white;
 }
+
+.Edit-VM {
+    background-color: var(--inactiveForeground);
+    color: white;
+}

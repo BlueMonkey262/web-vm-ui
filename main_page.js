@@ -58,6 +58,7 @@ function createVMElement(vm) {
   <div class="extra-buttons">
     <button class="force-off" onclick="killVM(this)">Force Off</button>
     <button class="reboot" onclick="restartVM(this)">Reboot</button>
+    <button class="Edit-VM" onclick="openEditor('testvm')">Edit</button>
   </div>
 </div>
 </div>
@@ -106,4 +107,16 @@ window.addEventListener("load", () => {
     }
 });
 
+function openEditor(vmName) {
+    // Encode the VM name for use in the URL
+    const encodedName = encodeURIComponent(vmName);
+
+    // Construct the path to the editor page
+    let editorUrl = `vm-editor/edit.html?name=${encodedName}`;
+
+    // Navigate to the editor page
+    window.location.href = editorUrl;
+}
+
 setInterval(fetchVMs, 3000);
+
