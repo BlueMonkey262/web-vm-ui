@@ -5,6 +5,9 @@
     <title>VM Viewer</title>
     <link rel="stylesheet" type="text/css" href="VM-viewer.css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Auth0 SDK -->
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+    <script src="auth-config.js"></script>
     <script>
         function openPassword() {
             const box = document.getElementById("password");
@@ -31,6 +34,8 @@
 <div id="topbar">
     <div id="controls">
         <a href="main_page.html"><button id="home" class="material-icons" title="Home">home</button></a>
+        <span id="viewer-user-info" style="margin-left: auto; margin-right: 10px; display: none;"></span>
+        <button onclick="logout()" style="display: none;" id="viewer-logout-btn">Logout</button>
         <input class = "hidden" id="host" value="192.168.50.193" placeholder="Host">
         <input class = "hidden" id="port" placeholder="Port">
         <button class="start connectBtn" id="connectButton">Start Connection</button>
@@ -47,7 +52,22 @@
   <div id="debug-div"></div>
 </div>
 
-
+<script>
+// Protect this page with authentication
+(async function() {
+    const authenticated = await requireAuth();
+    if (authenticated) {
+        // Show user info
+        const user = await getUserInfo();
+        if (user) {
+            const userInfoEl = document.getElementById('viewer-user-info');
+            userInfoEl.textContent = user.email || user.name;
+            userInfoEl.style.display = 'inline';
+            document.getElementById('viewer-logout-btn').style.display = 'inline-block';
+        }
+    }
+})();
+</script>
 <script type="module" src="spice-client.js" crossorigin="anonymous"></script>
 
 </body>
