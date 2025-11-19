@@ -3,26 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <title>Edit VM</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="edit.css">
 </head>
 <body>
-<h1>Edit VM</h1>
+  <main class="container">
+    <header class="header">
+      <h1>Edit Virtual Machine</h1>
+      <p class="subtitle">Adjust resources and choose disk image. Changes can be applied live if the VM is running.</p>
+    </header>
 
+    <section class="card">
+      <form id="editForm" class="form">
+        <div class="field">
+          <label for="nameDisplay">VM Name</label>
+          <div id="nameDisplay" class="vm-name">—</div>
+        </div>
 
-<form id="editForm">
-    <label>
-        Memory (MB):
-        <input type="number" name="memory_mb" required>
-    </label><br>
+        <div class="field">
+          <label for="memoryRange">Memory (MB)</label>
+          <div class="range-row">
+            <input id="memoryRange" type="range" min="256" max="65536" step="256">
+            <input id="memoryNumber" type="number" min="256" max="65536" step="256" class="number-input">
+          </div>
+          <div class="hint">Use the slider or number box. Changes in MB.</div>
+        </div>
 
-    <label>
-        vCPUs:
-        <input type="number" name="vcpus" required>
-    </label><br>
+        <div class="field">
+          <label for="vcpuRange">vCPUs</label>
+          <div class="range-row">
+            <input id="vcpuRange" type="range" min="1" max="32" step="1">
+            <input id="vcpuNumber" type="number" min="1" max="32" step="1" class="number-input">
+          </div>
+          <div class="hint">Maximum of 10.</div>
+        </div>
 
-    <button type="submit">Save Changes</button>
-</form>
+        <div class="field">
+          <label for="diskSelect">Disk image (qcow2)</label>
+          <select id="diskSelect" class="select"></select>
+          <input id="diskCustom" class="text-input" placeholder="Enter custom qcow2 path..." style="display:none;">
+          <div class="hint">Select an existing disk image or choose "Custom" to type a path.</div>
+        </div>
 
-<div id="result" style="margin-top: 10px;"></div>
-<script src="vm_editor.js"></script>
+        <div class="actions">
+          <button id="saveBtn" type="submit" class="btn primary">Save Changes</button>
+          <button id="applyLiveBtn" type="button" class="btn">Apply Live (if running)</button>
+        </div>
+
+        <div id="result" class="result" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <footer class="footer">
+      <small>Tip: If the VM is running, some changes may be applied live; others take effect after reboot.</small>
+    </footer>
+  </main>
+
+  <script src="vm_editor.js"></script>
 </body>
 </html>

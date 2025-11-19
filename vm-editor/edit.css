@@ -1,0 +1,223 @@
+/* Modern editor styles for edit.html - dark theme, responsive layout */
+
+:root {
+  --bg-0: #071129;
+  --bg-1: #0b1320;
+  --card: #0f1720;
+  --muted: #9aa6b2;
+  --text: #e6eef6;
+  --accent: #4f8bf9;
+  --accent-2: #7dd3fc;
+  --success: #22c55e;
+  --danger: #ff6b6b;
+  --glass: rgba(255,255,255,0.03);
+  --radius: 12px;
+  --shadow: 0 8px 30px rgba(2,6,23,0.65);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+  --ui-font: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+* { box-sizing: border-box; font-family: var(--ui-font); }
+
+html,body {
+  height: 100%;
+  margin: 0;
+  background: linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 100%);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Layout container */
+.container {
+  max-width: 960px;
+  margin: 28px auto;
+  padding: 20px;
+}
+
+/* Header */
+.header {
+  margin-bottom: 18px;
+}
+.header h1 {
+  margin: 0 0 4px 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.2px;
+}
+.subtitle {
+  margin: 4px 0 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* Card */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+  border: 1px solid rgba(255,255,255,0.04);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* Form fields */
+.form .field {
+  margin-bottom: 14px;
+}
+label {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+/* VM name display */
+.vm-name {
+  display: inline-block;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 10px;
+  color: var(--accent-2);
+  font-weight: 600;
+}
+
+/* Range row: slider + number */
+.range-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.number-input {
+  width: 120px;
+  min-width: 88px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.03);
+  color: var(--text);
+}
+
+/* Styled select and text input */
+.select, .text-input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.01);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+/* Hints */
+.hint {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Buttons */
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(255,255,255,0.02);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.02);
+}
+.btn.primary {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #061324;
+}
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn:hover:not(:disabled) { transform: translateY(-3px); }
+
+/* Result / status */
+.result {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.015);
+  color: var(--muted);
+  min-height: 48px;
+  font-family: var(--mono);
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+}
+
+/* Range (slider) styling */
+input[type="range"] {
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+  height:10px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+  border-radius: 999px;
+  outline: none;
+  padding:0;
+  margin:0;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25);
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background: linear-gradient(180deg,#fff,#dfe7fb);
+  border:2px solid rgba(0,0,0,0.12);
+  box-shadow: 0 6px 14px rgba(2,6,23,0.6);
+  margin-top: -5px;
+  cursor: pointer;
+}
+
+/* accessible focus */
+input:focus, select:focus, .btn:focus {
+  outline: 3px solid rgba(127,170,255,0.12);
+  outline-offset: 3px;
+}
+
+/* Footer */
+.footer {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 680px) {
+  .range-row { flex-direction: column; align-items: stretch; }
+  .number-input { width: 100%; }
+  .actions { flex-direction: column; align-items: stretch; }
+}
+
+/* Small visual flourish for the card when VM likely running (JS may toggle .running class) */
+.card.running {
+  border: 1px solid rgba(127,255,178,0.08);
+  box-shadow: 0 12px 40px rgba(16,40,60,0.6), 0 0 24px rgba(79,139,249,0.06);
+}
+
+/* Subtle animated indicator for Save success/failure (JS may add classes) */
+.result.success {
+  border-left: 4px solid var(--success);
+  color: color-mix(in srgb, var(--text) 85%, var(--success));
+}
+.result.error {
+  border-left: 4px solid var(--danger);
+  color: color-mix(in srgb, var(--text) 85%, var(--danger));
+}
+```
+```

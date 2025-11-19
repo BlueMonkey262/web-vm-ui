@@ -7,6 +7,7 @@ from routes.vms_list import router as vms_list_router
 from routes.vms_edit import router as vms_edit_router
 from routes.vms_create import router as vms_create_router
 from routes.vms_control import router as vms_control_router
+from routes.get_sys_info import router as sys_router
 
 
 
@@ -39,6 +40,7 @@ app.include_router(vms_list_router, prefix="/vms")
 app.include_router(vms_edit_router, prefix="/vms")
 app.include_router(vms_create_router, prefix="/vms")
 app.include_router(vms_control_router, prefix="/vms")
+app.include_router(sys_router, prefix="/sys")
 
 # Ensure a placeholder favicon is present at the project root so the separate static server can serve it.
 import os

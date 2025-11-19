@@ -1,6 +1,6 @@
 // Toggle visibility of extra options under each VM box
 // Hosts to try (new IP first, fallback to previous IP). Adjust order as needed.
-window.API_HOSTS = ["http://192.168.50.120:8000", "http://192.168.50.193:8000"];
+window.API_HOSTS = ["http://192.168.50.120:8000"];
 window.API_BASE = window.API_HOSTS[0];
 
 // fetchAPI(path, options) will try each host in API_HOSTS until one succeeds.

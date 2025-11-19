@@ -1,27 +1,3 @@
-const vmListDiv = document.getElementById('vm-list');
-async function fetchVMs() {
-    try {
-        const res = await fetch(`${API_BASE}/vms`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        attachHoverEvents();
-        return data.vms;
-    } catch (err) {
-        vmListDiv.textContent = `Failed to load VMs: ${err.message}`;
-        return [];
-    }
-}
-
-async function startVM(name) {
-    try {
-        await fetch(`${API_BASE}/vms/start/${encodeURIComponent(name)}`, { method: 'POST' });
-        loadVMs();
-        setTimeout(updateVMStatuses, 1000)
-    } catch (err) {
-        alert(`Failed to start VM: ${err.message}`);
-    }
-}
-
 async function stopVM(name) {
     try {
         await fetch(`${API_BASE}/vms/stop/${encodeURIComponent(name)}`, { method: 'POST' });
@@ -54,11 +30,11 @@ function createVMElement(vm) {
   <button class="stop-styling">Stop</button>
   <button class="enter-viewer">View</button>
   <button class="more-styling hidden" onclick="toggleExtra(this)">Other</button>
-  
+
   <div class="extra-buttons">
-    <button class="force-off" onclick="killVM(this)">Force Off</button>
-    <button class="reboot" onclick="restartVM(this)">Reboot</button>
-    <button class="Edit-VM" onclick="openEditor('testvm')">Edit</button>
+    <button class="force-off">Force Off</button>
+    <button class="reboot">Reboot</button>
+    <button class="Edit-VM">Edit</button>
   </div>
 </div>
 </div>
@@ -70,6 +46,25 @@ function createVMElement(vm) {
     container.querySelector('.reboot').onclick = () => restartVM(vm.name);
     container.querySelector('.enter-viewer').onclick = () => openViewer(vm.name, vm.port);
 
+    // Attach handlers for extra buttons using the actual VM name
+    const forceBtn = container.querySelector('.force-off');
+    if (forceBtn) forceBtn.onclick = () => killVM(vm.name);
+
+    // Replace the Edit button node with a real link that contains the encoded VM name.
+    const editBtn = container.querySelector('.Edit-VM');
+    if (editBtn) {
+        const a = document.createElement('a');
+        a.className = 'Edit-VM';
+        a.textContent = 'Edit';
+        a.href = `vm-editor/edit.html?name=${encodeURIComponent(vm.name)}`;
+        // preserve button-like appearance if CSS targets .Edit-VM
+        a.style.textDecoration = 'none';
+        a.style.display = 'inline-block';
+        a.style.padding = '6px 10px';
+        a.style.borderRadius = '6px';
+        // replace node
+        editBtn.parentNode.replaceChild(a, editBtn);
+    }
 
     return container;
 }
@@ -107,16 +102,4 @@ window.addEventListener("load", () => {
     }
 });
 
-function openEditor(vmName) {
-    // Encode the VM name for use in the URL
-    const encodedName = encodeURIComponent(vmName);
-
-    // Construct the path to the editor page
-    let editorUrl = `vm-editor/edit.html?name=${encodedName}`;
-
-    // Navigate to the editor page
-    window.location.href = editorUrl;
-}
-
 setInterval(fetchVMs, 3000);
-

@@ -1,7 +1,7 @@
 // Auth0 Configuration
-const AUTH0_DOMAIN = 'YOUR_AUTH0_DOMAIN';  // e.g., 'your-tenant.us.auth0.com'
-const AUTH0_CLIENT_ID = 'YOUR_CLIENT_ID';
-const AUTH0_REDIRECT_URI = window.location.origin;
+const AUTH0_DOMAIN = 'dev-7hixvbszm3u7txyc.us.auth0.com';  // e.g., 'your-tenant.us.auth0.com'
+const AUTH0_CLIENT_ID = 'p0c1sTr0UwzxfVcnWUoRblxIyg9xCRYn';
+const AUTH0_REDIRECT_URI = window.location.origin + window.location.pathname;
 
 let auth0Client = null;
 
