@@ -1,5 +1,29 @@
 // Toggle visibility of extra options under each VM box
-const API_BASE = "http://192.168.50.193:8000";
+// Hosts to try (new IP first, fallback to previous IP). Adjust order as needed.
+window.API_HOSTS = ["http://192.168.50.120:8000", "http://192.168.50.193:8000"];
+window.API_BASE = window.API_HOSTS[0];
+
+// fetchAPI(path, options) will try each host in API_HOSTS until one succeeds.
+// It returns the Response of the first successful fetch or throws if all fail.
+window.fetchAPI = async function(path, options) {
+    let lastErr = null;
+    for (const host of window.API_HOSTS) {
+        const url = host + path;
+        try {
+            const res = await fetch(url, options);
+            // If fetch succeeded (got a response), return it even if status is 4xx/5xx.
+            // Network/CORS failures typically throw, so we catch them below.
+            return res;
+        } catch (err) {
+            console.warn("fetch failed for", url, err);
+            lastErr = err;
+            // try next host
+        }
+    }
+    // All hosts failed
+    throw lastErr || new Error("All API hosts failed");
+};
+
 function toggleExtra(button, showorhide) {
     console.log('toggleExtra called');
     const container = button.parentElement;
@@ -78,7 +102,7 @@ async function killVM(button) {
 
     // Call your API to kill the VM
     try {
-        await fetch(`${API_BASE}/vms/kill/${encodeURIComponent(vmName)}`, { method: 'POST' });
+        await window.fetchAPI(`/vms/kill/${encodeURIComponent(vmName)}`, { method: 'POST' });
         if (typeof loadVMs === 'function') {
             loadVMs();
         }
@@ -142,7 +166,7 @@ function attachHoverEvents() {
 
 async function restartVM(name) {
     try {
-        await fetch(`${API_BASE}/vms/reboot/${encodeURIComponent(name)}`, { method: 'POST' });
+        await window.fetchAPI(`/vms/reboot/${encodeURIComponent(name)}`, { method: 'POST' });
         loadVMs();
     } catch (err) {
         alert(`Failed to reboot VM: ${err.message}`);
