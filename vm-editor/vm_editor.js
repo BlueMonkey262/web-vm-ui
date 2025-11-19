@@ -18,7 +18,85 @@ function apiFetch(path, opts) {
     return fetch(base + path, opts);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+// Ensure a robust helper to extract qcow2 disk paths from various VM object shapes.
+// Placed near the top so it is available before any code references it.
+function extractDiskPaths(vm) {
+    const found = new Set();
+
+    if (!vm || typeof vm !== 'object') return [];
+
+    // Common single-field names
+    const singleKeys = ['disk_path', 'disk', 'primary_disk', 'root_disk', 'boot_disk'];
+    singleKeys.forEach(k => {
+        if (vm[k] && typeof vm[k] === 'string') found.add(vm[k]);
+    });
+
+    // Array of disk paths
+    if (Array.isArray(vm.disk_paths)) vm.disk_paths.forEach(p => p && found.add(p));
+    if (Array.isArray(vm.disks)) {
+        vm.disks.forEach(d => {
+            if (!d) return;
+            if (typeof d === 'string') found.add(d);
+            else if (typeof d === 'object') {
+                if (d.path) found.add(d.path);
+                if (d.source) found.add(d.source);
+                if (d.file) found.add(d.file);
+            }
+        });
+    }
+
+    // Device list variations
+    if (Array.isArray(vm.devices)) {
+        vm.devices.forEach(dev => {
+            if (dev && dev.type === 'disk') {
+                if (dev.source && typeof dev.source === 'string') found.add(dev.source);
+                if (dev.file && typeof dev.file === 'string') found.add(dev.file);
+            }
+        });
+    }
+
+    // Some backends provide block device maps
+    if (vm.block_devices && typeof vm.block_devices === 'object') {
+        Object.values(vm.block_devices).forEach(d => {
+            if (!d) return;
+            if (typeof d === 'string') found.add(d);
+            else if (d.path) found.add(d.path);
+            else if (d.source) found.add(d.source);
+        });
+    }
+
+    // If a raw XML is present, search for .qcow2 paths in it
+    const xmlSources = [];
+    if (vm.xml && typeof vm.xml === 'string') xmlSources.push(vm.xml);
+    if (vm.XMLDesc && typeof vm.XMLDesc === 'string') xmlSources.push(vm.XMLDesc);
+    if (vm.domain_xml && typeof vm.domain_xml === 'string') xmlSources.push(vm.domain_xml);
+
+    xmlSources.forEach(xml => {
+        try {
+            // quick regex to capture paths ending with .qcow2 (or .img)
+            const matches = xml.match(/(?:[A-Za-z0-9_\/\-\.\$~]+?\.(?:qcow2|img|raw))/g);
+            if (matches) matches.forEach(m => found.add(m));
+        } catch (e) {
+            // ignore parse errors
+        }
+    });
+
+    // Filter out empty entries and return as array
+    return Array.from(found).filter(Boolean);
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    // wait for auth to initialize and ensure user is authenticated
+    if (window.authInitPromise) {
+        try {
+            await window.authInitPromise;
+            await window.ensureAuthenticated();
+        } catch (e) {
+            console.warn("Auth initialization/ensure failed in editor:", e);
+            // continue gracefully; fetches will still attempt unauthenticated calls
+        }
+    }
+
     const vmName = getQueryParam("name");
     const form = document.getElementById("editForm");
     const resultDiv = document.getElementById("result");
@@ -97,101 +175,130 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     return res.json();
                 })
-                .then(data => {
-                    // data may be { vms: [...] } or a plain array
-                    const vms = Array.isArray(data) ? data : (data.vms || []);
-                    const vm = vms.find(v => v.name === vmName);
-                    if (!vm) {
-                        resultDiv.innerText = `VM "${vmName}" not found.`;
-                        return;
-                    }
+                .then(async data => { // <-- made async so we can call backend disk endpoint as fallback
+                     // data may be { vms: [...] } or a plain array
+                     const vms = Array.isArray(data) ? data : (data.vms || []);
+                     const vm = vms.find(v => v.name === vmName);
+                     if (!vm) {
+                         resultDiv.innerText = `VM "${vmName}" not found.`;
+                         return;
+                     }
 
-                    // Autofill memory and vcpus when present (backend units: memory_mb/property names may vary)
-                    // Try a few common field names
-                    const memCandidates = ['memory_mb', 'memory', 'mem', 'memoryMiB', 'memory_mib'];
-                    let memVal = null;
-                    for (const k of memCandidates) {
-                        if (vm[k] != null) { memVal = Number(vm[k]); break; }
-                    }
-                    if (memVal == null && vm.currentMemory != null) memVal = Number(vm.currentMemory);
-                    if (memVal == null && vm.maxMemory != null) memVal = Number(vm.maxMemory);
-                    // Ensure memVal does not exceed the UI max
-                    const memMaxUI = Number(memoryRange.max || originalMemMax);
-                    if (memVal != null) {
-                        memVal = clamp(memVal, Number(memoryRange.min || 256), memMaxUI);
-                        memoryRange.value = memVal;
-                        memoryNumber.value = memVal;
-                    } else {
-                        // default
-                        const defaultMem = Math.min(2048, memMaxUI);
-                        memoryRange.value = defaultMem;
-                        memoryNumber.value = defaultMem;
-                    }
+                     // Autofill memory and vcpus when present (backend units: memory_mb/property names may vary)
+                     // Try a few common field names
+                     const memCandidates = ['memory_mb', 'memory', 'mem', 'memoryMiB', 'memory_mib'];
+                     let memVal = null;
+                     for (const k of memCandidates) {
+                         if (vm[k] != null) { memVal = Number(vm[k]); break; }
+                     }
+                     if (memVal == null && vm.currentMemory != null) memVal = Number(vm.currentMemory);
+                     if (memVal == null && vm.maxMemory != null) memVal = Number(vm.maxMemory);
+                     // Ensure memVal does not exceed the UI max
+                     const memMaxUI = Number(memoryRange.max || originalMemMax);
+                     if (memVal != null) {
+                         memVal = clamp(memVal, Number(memoryRange.min || 256), memMaxUI);
+                         memoryRange.value = memVal;
+                         memoryNumber.value = memVal;
+                     } else {
+                         // default
+                         const defaultMem = Math.min(2048, memMaxUI);
+                         memoryRange.value = defaultMem;
+                         memoryNumber.value = defaultMem;
+                     }
 
-                    const vcpuCandidates = ['vcpus', 'vcpu', 'cpus', 'num_vcpus'];
-                    let vcpuVal = null;
-                    for (const k of vcpuCandidates) {
-                        if (vm[k] != null) { vcpuVal = Number(vm[k]); break; }
-                    }
-                    if (vcpuVal == null && vm.vcpu != null) vcpuVal = Number(vm.vcpu);
-                    // Ensure vcpuVal does not exceed the UI max
-                    const vcpuMaxUI = Number(vcpuRange.max || originalVcpuMax);
-                    if (vcpuVal != null) {
-                        vcpuVal = clamp(vcpuVal, Number(vcpuRange.min || 1), vcpuMaxUI);
-                        vcpuRange.value = vcpuVal;
-                        vcpuNumber.value = vcpuVal;
-                    } else {
-                        const defaultVcpu = Math.min(2, vcpuMaxUI);
-                        vcpuRange.value = defaultVcpu;
-                        vcpuNumber.value = defaultVcpu;
-                    }
+                     const vcpuCandidates = ['vcpus', 'vcpu', 'cpus', 'num_vcpus'];
+                     let vcpuVal = null;
+                     for (const k of vcpuCandidates) {
+                         if (vm[k] != null) { vcpuVal = Number(vm[k]); break; }
+                     }
+                     if (vcpuVal == null && vm.vcpu != null) vcpuVal = Number(vm.vcpu);
+                     // Ensure vcpuVal does not exceed the UI max
+                     const vcpuMaxUI = Number(vcpuRange.max || originalVcpuMax);
+                     if (vcpuVal != null) {
+                         vcpuVal = clamp(vcpuVal, Number(vcpuRange.min || 1), vcpuMaxUI);
+                         vcpuRange.value = vcpuVal;
+                         vcpuNumber.value = vcpuVal;
+                     } else {
+                         const defaultVcpu = Math.min(2, vcpuMaxUI);
+                         vcpuRange.value = defaultVcpu;
+                         vcpuNumber.value = defaultVcpu;
+                     }
 
-                    // Populate disk options
-                    const disks = extractDiskPaths(vm);
-                    diskSelect.innerHTML = '';
-                    if (disks.length === 0) {
-                        const opt = document.createElement('option');
-                        opt.value = '';
-                        opt.textContent = 'No known disk images';
-                        diskSelect.appendChild(opt);
-                    } else {
-                        disks.forEach(d => {
-                            const opt = document.createElement('option');
-                            opt.value = d;
-                            opt.textContent = d.split('/').pop() || d;
-                            diskSelect.appendChild(opt);
-                        });
-                    }
-                    // Add a Custom option
-                    const sep = document.createElement('option');
-                    sep.value = '__custom__';
-                    sep.textContent = 'Custom path...';
-                    diskSelect.appendChild(sep);
+                     // Populate disk options
+                     let disks = extractDiskPaths(vm);
 
-                    // If VM object carries a "primary" disk, try to select it
-                    if (vm.disk_path) {
-                        diskSelect.value = vm.disk_path;
-                    } else if (disks.length > 0) {
-                        diskSelect.selectedIndex = 0;
-                    }
+                     // If no disks were found client-side, try backend helper endpoint /vms/{name}/disks
+                     if ((!disks || disks.length === 0) && typeof apiFetch === 'function') {
+                         try {
+                             const dres = await apiFetch(`/vms/${encodeURIComponent(vmName)}/disks`);
+                             if (dres && dres.ok) {
+                                 const dd = await dres.json();
+                                 if (Array.isArray(dd.disks) && dd.disks.length > 0) {
+                                     disks = dd.disks;
+                                 } else if (Array.isArray(dd)) {
+                                     disks = dd;
+                                 }
+                             }
+                         } catch (e) {
+                             console.warn("Failed to fetch disk list from backend for", vmName, e);
+                         }
+                     }
 
-                    // Show/hide custom input when custom selected
-                    function updateDiskCustomVisibility() {
-                        if (diskSelect.value === '__custom__') {
-                            diskCustom.style.display = 'block';
-                        } else {
-                            diskCustom.style.display = 'none';
-                        }
-                    }
-                    diskSelect.addEventListener('change', updateDiskCustomVisibility);
-                    updateDiskCustomVisibility();
+                     diskSelect.innerHTML = '';
+                     if (disks.length === 0) {
+                         const opt = document.createElement('option');
+                         opt.value = '';
+                         opt.textContent = 'No known disk images';
+                         diskSelect.appendChild(opt);
+                     } else {
+                         // helper to display the filename part and preserve the extension
+                         const displayFilename = (p) => {
+                             try {
+                                 const last = (p || '').split('/').pop() || p;
+                                 // decode URL-encoded names but keep extension intact
+                                 return decodeURIComponent(String(last));
+                             } catch (e) {
+                                 return String(p);
+                             }
+                         };
 
-                    resultDiv.innerText = '';
-                })
-                .catch(err => {
-                    console.warn("Failed to fetch VM info:", err);
-                    resultDiv.innerText = "Could not fetch VM info (backend unreachable).";
-                });
+                         disks.forEach(d => {
+                             const opt = document.createElement('option');
+                             opt.value = d;
+                             opt.textContent = displayFilename(d);
+                             diskSelect.appendChild(opt);
+                         });
+                     }
+                     // Add a Custom option
+                     const sep = document.createElement('option');
+                     sep.value = '__custom__';
+                     sep.textContent = 'Custom path...';
+                     diskSelect.appendChild(sep);
+
+                     // If VM object carries a "primary" disk, try to select it
+                     if (vm.disk_path) {
+                         diskSelect.value = vm.disk_path;
+                     } else if (disks.length > 0) {
+                         diskSelect.selectedIndex = 0;
+                     }
+
+                     // Show/hide custom input when custom selected
+                     function updateDiskCustomVisibility() {
+                         if (diskSelect.value === '__custom__') {
+                             diskCustom.style.display = 'block';
+                         } else {
+                             diskCustom.style.display = 'none';
+                         }
+                     }
+                     diskSelect.addEventListener('change', updateDiskCustomVisibility);
+                     updateDiskCustomVisibility();
+
+                     resultDiv.innerText = '';
+                 })
+                 .catch(err => {
+                     console.warn("Failed to fetch VM info:", err);
+                     resultDiv.innerText = "Could not fetch VM info (backend unreachable).";
+                 });
         });
 
     // Submit edits

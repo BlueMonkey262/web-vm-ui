@@ -5,6 +5,17 @@
     <title>VM Viewer</title>
     <link rel="stylesheet" type="text/css" href="VM-viewer.css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="auth.js"></script>
+    <script>
+      (async function(){
+        try {
+          await window.authInitPromise;
+          await window.ensureAuthenticated();
+        } catch (e) {
+          console.warn("Auth error on viewer:", e);
+        }
+      })();
+    </script>
     <script>
         function openPassword() {
             const box = document.getElementById("password");

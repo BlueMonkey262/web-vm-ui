@@ -1,214 +1,247 @@
 :root {
-    --activeBackground: #272c31;
-    --activeForeground: #363a40;
-    --activeBlend: #fcfcfc;
-    --inactiveBackground: #202428;
-    --inactiveForeground: #505860;
-    --inactiveBlend: #a1a9b1;
-    --DecorationFocus: #51585e;
+  --bg-0: #071129;
+  --bg-1: #0b1320;
+  --card: #0f1720;
+  --muted: #9aa6b2;
+  --text: #e6eef6;
+  --accent: #4f8bf9;
+  --accent-2: #7dd3fc;
+  --activeForeground: #11161d; /* maps to previous activeForeground */
+  --inactiveForeground: #2b3238; /* maps to previous inactiveForeground */
+  --DecorationFocus: #51585e;
+  --radius: 10px;
+  --shadow: 0 10px 30px rgba(2,6,23,0.6);
+  --glass: rgba(255,255,255,0.03);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+  --ui-font: Orbitron, Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 
+/* Page base */
+* { box-sizing: border-box; }
 body {
-    background: var(--activeBackground);
-    color: #eee;
-    padding: 20px;
-    font-family: Orbitron, sans-serif;
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 100%);
+  color: var(--text);
+  font-family: var(--ui-font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1 {
-    margin-bottom: 20px;
-}
+/* Headings */
+h1 { margin-bottom: 20px; font-size: 1.9rem; letter-spacing: -0.4px; text-align: center; font-family: 'Orbitron', var(--ui-font); }
+h2 { margin: 10px 0 5px; }
 
-h2 {
-    margin: 10px 0 5px;
-}
-
+/* Buttons base (keeps existing classes) */
 button {
-    padding: 8px 15px;
-    margin-right: 10px;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    background-color: #333;
-    color: #eee;
-    white-space: nowrap; /* Prevent button text wrap */
+  padding: 8px 15px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: rgba(255,255,255,0.03);
+  color: var(--text);
+  white-space: nowrap;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
 }
+button:hover { transform: translateY(-2px); }
 
+/* Action-specific buttons */
 .start-styling {
-    background-color: #4CAF50;
-    color: white;
+  background: linear-gradient(90deg, #2ecc71, #37d67a);
+  color: #061324;
 }
-
 .stop-styling {
-    background-color: #f44336;
-    color: white;
+  background: linear-gradient(90deg, #ff6b6b, #ff4d4d);
+  color: #061324;
 }
-
-.other-styling {
-    background-color: var(--DecorationFocus);
-}
-
 .enter-viewer {
-    background-color: #2196F3;
-    color: white;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #061324;
+}
+.other-styling {
+  background-color: var(--DecorationFocus);
+  color: var(--text);
 }
 
+/* VM container grid preserved but themed */
 .vm-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(23em, 1fr));
-    gap: 16px;
-    margin-bottom: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(23em, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
 }
 
-.status {
-    font-style: italic;
-    margin-bottom: 5px;
-    color: #aaa;
-}
-
-.vm-header {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 5px;
-}
-
-.button-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-}
-
-.main-buttons {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0; /* don't shrink */
-}
-
-.extra-buttons {
-    display: flex;
-    flex-wrap: wrap;     /* allow buttons inside to wrap */
-    gap: 8px;
-    flex-grow: 1;        /* take remaining space */
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transition: max-height 0.5s ease, opacity 0.3s ease;
-    white-space: normal;
-}
-
-/* When shown, allow enough height for buttons */
-.extra-buttons.show {
-    max-height: 200px;   /* adjust if needed */
-    opacity: 1;
-}
-
-
-.force-off {
-    background-color: var(--inactiveForeground);
-    color: white;
-}
-
-.reboot {
-    background-color: var(--inactiveForeground);
-    color: white;
-}
-
+/* VM box card - increase contrast and separation from background */
 .vm-box {
-    background-color: var(--activeForeground);
-    color: white;
-    padding: 12px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(0,0,0,0.045));
+  border: 1px solid rgba(255,255,255,0.06);
+  color: var(--text);
+  padding: 14px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), 0 6px 18px rgba(79,139,249,0.03);
+  position: relative;
+  z-index: 0;
+  overflow: visible;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  backdrop-filter: blur(6px);
+}
+.vm-box:hover { transform: translateY(-6px); }
 
-    /* These two are important for glowing border */
-    position: relative;
-    z-index: 0; /* ensure the glow is behind */
-    overflow: visible; /* allow glow to extend outside */
+/* faint inner vignette for vm-box */
+.vm-box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  pointer-events: none;
+  box-shadow: inset 0 8px 30px rgba(0,0,0,0.18);
+  opacity: 0.06;
 }
 
-.vm-box:hover {
-    scale:1.02;
-    transition: scale 0.3s ease;
+/* subtle edge highlight for separation */
+.vm-box::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius) + 1px);
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(127,170,255,0.03), rgba(255,255,255,0.00));
+  mix-blend-mode: overlay;
 }
 
+/* Running indicator (keeps outer glow) - keep existing animation but ensure inner glow remains faint */
 .vm-box.running {
-    border: 1px solid #00ff80;
-    box-shadow: 0 0 5px 2px rgba(0, 255, 128, 0.6);
-    animation: glowBorder 5s ease-in-out infinite;
+  /* existing outer glow kept; inner glow already faint via ::after and inset shadows */
+  border: 1px solid rgba(127,255,178,0.08);
+  box-shadow:
+    0 0 8px 2px rgba(0, 255, 128, 0.18),
+    inset 0 1px 20px rgba(0, 255, 128, 0.03),
+    var(--shadow);
+  animation: glowBorder 5s ease-in-out infinite;
 }
 
-
-.hidden {
-    display: none !important;
+/* Status & header */
+.status {
+  font-style: italic;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+.vm-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
+/* Button row and main buttons */
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.main-buttons { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* Extra buttons collapse behavior preserved */
+.extra-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-grow: 1;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.45s cubic-bezier(.2,.9,.2,1), opacity 0.25s ease;
+  align-items: center;
+  white-space: normal;
+}
+.extra-buttons.show {
+  max-height: 200px;
+  opacity: 1;
+}
+
+/* Specific action styles */
+.force-off, .reboot, .Edit-VM {
+  background-color: var(--inactiveForeground);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+/* hidden utility */
+.hidden { display: none !important; }
+
+/* Confirmation overlay & modal (preserve features) */
 #confirm-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.5); /* dark translucent */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* make sure it's above everything */
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2,6,12,0.55);
+  z-index: 1000;
 }
-
-/* Hidden by default */
-#confirm-overlay.hidden {
-    display: none;
-}
-
-/* The confirmation box */
+#confirm-overlay.hidden { display: none; }
 .confirm-modal {
-    background: var(--activeForeground);
-    padding: 20px 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.6);
-    color: white;
-    max-width: 90%;
-    max-height: 80%;
-    text-align: center;
-    backdrop-filter: blur(8px); /* subtle blur behind the modal itself */
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+  padding: 20px 28px;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(2,6,23,0.6);
+  color: var(--text);
+  max-width: 90%;
+  text-align: center;
+  backdrop-filter: blur(8px);
 }
 
-/* Blur the page content when the overlay is visible */
+/* Blur effect when overlay active */
 body.blur-active > *:not(#confirm-overlay) {
-    filter: blur(6px);
-    user-select: none;
-    pointer-events: none;
-    transition: filter 0.3s ease;
+  filter: blur(6px);
+  user-select: none;
+  pointer-events: none;
+  transition: filter 0.3s ease;
 }
 
+/* Title */
 #title {
-    text-align: center;
-    font-family: 'Orbitron';
-    font-size: 2em;
+  text-align: center;
+  font-family: 'Orbitron', var(--ui-font);
+  font-size: 2em;
+  margin: 0 0 18px 0;
 }
 
-.vm-box.running {
-
+/* small tweaks to match editor theme */
+.vm-box .vm-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
 }
+.vm-box .status { font-size: 0.92rem; }
 
+/* glow animation (kept) */
 @keyframes glowBorder {
-    0%, 100% {
-        box-shadow: 0 0 10px 2px rgba(0, 255, 128, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 16px 4px rgba(0, 255, 128, 0.8);
-    }
+  0%,100% { box-shadow: 0 0 10px 2px rgba(0,255,128,0.4); }
+  50%    { box-shadow: 0 0 16px 4px rgba(0,255,128,0.8); }
 }
 
+/* Confirm button styling */
 #confirm-yes {
-    background-color: #f44336;
-    color: white;
+  background: linear-gradient(90deg, #ff6b6b, #ff4d4d);
+  color: #061324;
 }
 
-.Edit-VM {
-    background-color: var(--inactiveForeground);
-    color: white;
+/* Responsive: keep grid and spacing functional on small screens */
+@media (max-width: 680px) {
+  .vm-container { grid-template-columns: 1fr; }
+  .button-row { gap: 10px; }
+}
+
+/* Maintain compatibility: allow Edit-VM selector as previous */
+.Edit-VM { text-decoration: none; display: inline-block; }
+
+/* subtle hover states for small buttons */
+.force-off:hover, .reboot:hover, .Edit-VM:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45);
 }

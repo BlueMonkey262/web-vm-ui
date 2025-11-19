@@ -1,14 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8" />
+    <title>VM Manager</title>
+    <link rel="stylesheet" href="main_page.css" />
+    <script src="auth.js"></script>
     <script src="vmDropDown.js"></script>
-<meta charset="UTF-8" />
-<title>VM Manager</title>
-<link rel="stylesheet" href="main_page.css" />
 </head>
 <body>
 
-<h1 id="title">VM Manager</h1>
+<header style="display:flex;justify-content:space-between;align-items:center;">
+  <h1 id="title">VM Manager</h1>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="admin-btn" style="padding:6px 10px;border-radius:6px;display:none;">Admin</button>
+    <button id="auth-btn" style="padding:6px 10px;border-radius:6px;">...</button>
+  </div>
+</header>
+
 <div id="vm-list" class="vm-container">Loading VMs...</div>
 
 <div id="confirm-overlay" class="hidden">
@@ -19,7 +27,73 @@
     </div>
 </div>
 
+<!-- Admin modal (hidden by default) -->
+<div id="admin-modal" style="display:none; position:fixed;inset:0;align-items:center;justify-content:center;z-index:1100;">
+  <div style="width:520px;max-width:94%;background:rgba(12,18,28,0.98);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 12px 36px rgba(0,0,0,0.6);">
+    <h2 style="margin:0 0 8px 0;">Admin Settings</h2>
+    <p style="color:#9aa6b2;margin:0 0 12px 0;">Only users with the "admin" role can access these settings.</p>
 
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <label style="color:#9aa6b2">Site title</label>
+      <input id="admin-site-title" style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:rgba(255,255,255,0.02);color:var(--text)">
+
+      <label style="color:#9aa6b2">Allow remote management</label>
+      <select id="admin-remote-mgmt" style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:rgba(255,255,255,0.02);color:var(--text)">
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">
+        <button id="admin-cancel" style="padding:8px 12px;border-radius:8px;">Cancel</button>
+        <button id="admin-save" style="padding:8px 12px;border-radius:8px;background:linear-gradient(90deg,#4f8bf9,#7dd3fc);color:#061324;">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ensure auth before interacting; update auth button state and admin visibility
+  (async function() {
+    try {
+      await window.authInitPromise;
+      // ensure the user is authenticated first so profile/claims are available
+      await window.ensureAuthenticated();
+
+      const authBtn = document.getElementById('auth-btn');
+      const adminBtn = document.getElementById('admin-btn');
+
+      const isAuth = await window._auth0.isAuthenticated();
+      if (isAuth) {
+        const user = await window.getUser();
+        authBtn.textContent = "Logout " + (user && user.name ? ("(" + user.name.split(' ')[0] + ")") : "");
+        authBtn.onclick = () => window.logout();
+      } else {
+        authBtn.textContent = "Login";
+        authBtn.onclick = () => window.login();
+      }
+
+      // Show Admin button only to users who have the 'admin' role
+      let isAdmin = false;
+      if (window.userHasRole) {
+        try {
+          isAdmin = await window.userHasRole('admin');
+        } catch (e) {
+          console.warn("userHasRole check failed:", e);
+        }
+      }
+      if (isAdmin) {
+        adminBtn.style.display = 'inline-block';
+        // navigate to admin page (new page) instead of opening modal
+        adminBtn.onclick = () => { window.location.href = 'admin.html'; };
+      } else {
+        adminBtn.style.display = 'none';
+      }
+
+    } catch (e) {
+      console.warn("Auth init on main page failed:", e);
+    }
+  })();
+</script>
 
 <script src="main_page.js"></script>
 </body>

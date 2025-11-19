@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin Settings</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="main_page.css" />
+  <script src="auth.js"></script>
+</head>
+<body>
+  <main style="max-width:980px;margin:28px auto;padding:20px;">
+    <header style="display:flex;justify-content:space-between;align-items:center;">
+      <h1>Admin Settings</h1>
+      <div>
+        <button id="admin-logout" style="padding:6px 10px;border-radius:6px;">Logout</button>
+      </div>
+    </header>
+
+    <section id="admin-area" style="margin-top:18px;">
+      <div id="admin-message" style="color:#9aa6b2;">Checking permissions...</div>
+      <div id="admin-content" style="display:none;margin-top:12px;">
+        <!-- Admin UI: intentionally blank for now -->
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (async function() {
+      try {
+        await window.authInitPromise;
+        // ensure user is authenticated
+        await window.ensureAuthenticated();
+
+        const logoutBtn = document.getElementById('admin-logout');
+        logoutBtn.onclick = () => window.logout();
+
+        // check admin role
+        const isAdmin = (window.userHasRole) ? await window.userHasRole('admin') : false;
+        if (!isAdmin) {
+          document.getElementById('admin-message').textContent = 'Access denied: you do not have the admin role.';
+          return;
+        }
+
+        document.getElementById('admin-message').style.display = 'none';
+        const content = document.getElementById('admin-content');
+        content.style.display = 'block';
+        // left intentionally blank for future admin settings
+      } catch (e) {
+        console.warn('Admin page init failed:', e);
+        document.getElementById('admin-message').textContent = 'Failed to initialize authentication.';
+      }
+    })();
+  </script>
+</body>
+</html>
+

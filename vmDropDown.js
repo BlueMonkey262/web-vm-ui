@@ -5,12 +5,33 @@ window.API_BASE = window.API_HOSTS[0];
 
 // fetchAPI(path, options) will try each host in API_HOSTS until one succeeds.
 // It returns the Response of the first successful fetch or throws if all fail.
-window.fetchAPI = async function(path, options) {
+window.fetchAPI = async function(path, options = {}) {
     let lastErr = null;
+
+    // ensure auth initialized (if present) before attempting token retrieval
+    if (window.authInitPromise) {
+        try { await window.authInitPromise; } catch (e) { /* ignore init errors, try fetch anyway */ }
+    }
+
     for (const host of window.API_HOSTS) {
         const url = host + path;
         try {
-            const res = await fetch(url, options);
+            // attach Authorization header if we can obtain a token
+            let opts = Object.assign({}, options);
+            opts.headers = Object.assign({}, opts.headers || {});
+
+            if (window.authGetToken) {
+                try {
+                    const token = await window.authGetToken();
+                    if (token) {
+                        opts.headers = Object.assign({}, opts.headers, { "Authorization": "Bearer " + token });
+                    }
+                } catch (err) {
+                    console.warn("auth token fetch failed, continuing without token:", err);
+                }
+            }
+
+            const res = await fetch(url, opts);
             // If fetch succeeded (got a response), return it even if status is 4xx/5xx.
             // Network/CORS failures typically throw, so we catch them below.
             return res;

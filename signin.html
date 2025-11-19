@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign in — VM Manager</title>
+  <link rel="stylesheet" href="vm-editor/edit.css">
+  <script src="auth.js" defer></script>
+</head>
+<body>
+  <div class="container" style="display:flex;align-items:center;justify-content:center;min-height:80vh;">
+    <div class="card" style="max-width:640px;width:100%;text-align:center;">
+      <header class="header" style="margin-bottom:18px;">
+        <h1 style="margin:0">Sign in to VM Manager</h1>
+        <p class="subtitle">You were signed out. Please sign in to continue.</p>
+      </header>
+
+      <div style="padding:6px 12px;">
+        <p id="status" class="hint">Preparing sign-in...</p>
+
+        <div style="margin-top:18px;display:flex;gap:12px;justify-content:center;align-items:center;">
+          <button id="signin-btn" class="btn primary" style="font-size:1.05rem;padding:12px 20px;">
+            Sign in with Auth0
+          </button>
+        </div>
+
+        <p class="hint" style="margin-top:14px;color:var(--muted);font-size:0.9rem;">
+          After sign-in you will be redirected back to the app.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Robust loader: ensure auth.js is present and initialized before using auth globals.
+    (async function () {
+      const status = document.getElementById('status');
+      const btn = document.getElementById('signin-btn');
+
+      // Helper to dynamically load auth.js if it's not already loaded
+      async function ensureAuthJsLoaded() {
+        if (window.authInitPromise) return;
+        // If a script tag for auth.js already exists but hasn't executed yet, wait a short time.
+        const existing = Array.from(document.getElementsByTagName('script')).find(s => s.src && s.src.endsWith('auth.js'));
+        if (existing) {
+          // wait for it to execute and set authInitPromise (polling)
+          for (let i = 0; i < 40; i++) {
+            if (window.authInitPromise) return;
+            await new Promise(r => setTimeout(r, 50));
+          }
+        }
+        // Otherwise, create and append the script and wait for it to load
+        return new Promise((resolve, reject) => {
+          try {
+            const s = document.createElement('script');
+            s.src = 'auth.js';
+            s.defer = true;
+            s.onload = () => {
+              // auth.js assigns window.authInitPromise; wait for it briefly
+              (async function waitInit() {
+                for (let i = 0; i < 40; i++) {
+                  if (window.authInitPromise) return resolve();
+                  await new Promise(r => setTimeout(r, 50));
+                }
+                // if still not present, resolve anyway so caller can show an error
+                resolve();
+              })();
+            };
+            s.onerror = (e) => reject(e);
+            document.head.appendChild(s);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }
+
+      try {
+        await ensureAuthJsLoaded();
+      } catch (e) {
+        console.warn('Failed to load auth.js dynamically:', e);
+      }
+
+      // Defensive: if auth.js still not present, show fallback message
+      if (!window.authInitPromise) {
+        status.textContent = 'Authentication not configured.';
+        btn.disabled = true;
+        return;
+      }
+
+      try {
+        // wait for the Auth0 client to initialize
+        await window.authInitPromise;
+      } catch (e) {
+        console.warn('Auth init failed:', e);
+        status.textContent = 'Authentication initialization failed.';
+        return;
+      }
+
+      try {
+        const isAuth = await window._auth0.isAuthenticated();
+        if (isAuth) {
+          // already signed in — go back to main page
+          status.textContent = 'Already signed in. Redirecting...';
+          window.location.href = 'main_page.html';
+          return;
+        }
+      } catch (e) {
+        console.warn('isAuthenticated check failed:', e);
+        // continue; allow manual sign-in
+      }
+
+      status.textContent = 'Not signed in.';
+      btn.onclick = async () => {
+        btn.disabled = true;
+        status.textContent = 'Redirecting to sign-in...';
+        try {
+          // trigger Auth0 login redirect flow
+          await window._auth0.loginWithRedirect({ redirect_uri: window.location.origin + '/main_page.html' });
+        } catch (err) {
+          console.error('Login redirect failed', err);
+          status.textContent = 'Sign-in failed. Try again.';
+          btn.disabled = false;
+        }
+      };
+    })();
+  </script>
+</body>
+</html>

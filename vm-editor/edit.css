@@ -52,11 +52,43 @@ html,body {
 
 /* Card */
 .card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
-  border: 1px solid rgba(255,255,255,0.04);
+  /* slightly stronger background and border so card lifts from page more */
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(0,0,0,0.045));
+  border: 1px solid rgba(255,255,255,0.06);
   padding: 20px;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), 0 6px 18px rgba(79,139,249,0.03); /* faint cool rim */
+  position: relative; /* for pseudo highlight */
+  backdrop-filter: blur(6px);
+}
+
+/* subtle inner vignette to make content feel recessed */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  pointer-events: none;
+  box-shadow: inset 0 8px 30px rgba(0,0,0,0.18);
+  mix-blend-mode: normal;
+  opacity: 0.06;
+}
+
+/* faint edge highlight for separation */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius) + 1px);
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(127,170,255,0.03), rgba(255,255,255,0.00));
+  mix-blend-mode: overlay;
+}
+
+/* hover lift (subtle) */
+.card:hover {
+  transform: translateY(-6px);
+  transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
 /* Form fields */
@@ -207,7 +239,11 @@ input:focus, select:focus, .btn:focus {
 /* Small visual flourish for the card when VM likely running (JS may toggle .running class) */
 .card.running {
   border: 1px solid rgba(127,255,178,0.08);
-  box-shadow: 0 12px 40px rgba(16,40,60,0.6), 0 0 24px rgba(79,139,249,0.06);
+  /* outer shadow unchanged, add a very faint inset shadow for subtle inner glow */
+  box-shadow:
+    inset 0 2px 18px rgba(127,255,178,0.025), /* faint inner glow */
+    0 12px 40px rgba(16,40,60,0.6),
+    0 0 24px rgba(79,139,249,0.06);
 }
 
 /* Subtle animated indicator for Save success/failure (JS may add classes) */
@@ -219,5 +255,3 @@ input:focus, select:focus, .btn:focus {
   border-left: 4px solid var(--danger);
   color: color-mix(in srgb, var(--text) 85%, var(--danger));
 }
-```
-```

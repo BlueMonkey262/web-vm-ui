@@ -5,6 +5,7 @@
     <title>Edit VM</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="edit.css">
+    <script src="../auth.js"></script>
 </head>
 <body>
   <main class="container">
@@ -58,6 +59,18 @@
       <small>Tip: If the VM is running, some changes may be applied live; others take effect after reboot.</small>
     </footer>
   </main>
+
+  <script>
+    // ensure user is authenticated before running editor
+    (async function() {
+      try {
+        await window.authInitPromise;
+        await window.ensureAuthenticated();
+      } catch (e) {
+        console.warn("Auth error in editor:", e);
+      }
+    })();
+  </script>
 
   <script src="vm_editor.js"></script>
 </body>

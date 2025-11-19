@@ -24,25 +24,52 @@ def edit_vm(vm_name: str, changes: VMEditRequest):
 
     if changes.memory_mb is not None:
         try:
-            # If running, setMemory adjusts memory live (value in KiB for libvirt).
+            # convert MB -> KiB for libvirt APIs / XML
+            new_kib = int(changes.memory_mb) * 1024
+
+            # If running, ensure max memory is large enough, then set live memory.
             if state == 1:
-                domain.setMemory(changes.memory_mb * 1024)
-                messages.append(f"Memory changed live to {changes.memory_mb} MB")
+                # determine current max memory (KiB). Prefer maxMemory() if available.
+                try:
+                    current_max_kib = domain.maxMemory()
+                except Exception:
+                    info = domain.info()
+                    current_max_kib = info[1] if info and len(info) > 1 else None
+
+                # If new memory exceeds current max, raise max first.
+                if current_max_kib is None or new_kib > int(current_max_kib):
+                    try:
+                        domain.setMaxMemory(new_kib)
+                        messages.append(f"Max memory increased to {changes.memory_mb} MB")
+                    except libvirt.libvirtError as e:
+                        conn.close()
+                        raise HTTPException(500, f"Failed to increase max memory: {e}")
+
+                # Now set current memory (value in KiB)
+                try:
+                    domain.setMemory(new_kib)
+                    messages.append(f"Memory changed live to {changes.memory_mb} MB")
+                except libvirt.libvirtError as e:
+                    conn.close()
+                    raise HTTPException(500, f"Failed to change memory: {e}")
+
             else:
                 # Modify XML for persistent change when the VM is not running.
                 xml = domain.XMLDesc()
                 root = ET.fromstring(xml)
 
+                # Use KiB units in XML to avoid unit mismatch confusion.
                 mem_elem = root.find("memory")
                 if mem_elem is None:
-                    mem_elem = ET.SubElement(root, "memory", unit="MiB")
-                mem_elem.text = str(changes.memory_mb)
-                mem_elem.set("unit", "MiB")
+                    mem_elem = ET.SubElement(root, "memory", unit="KiB")
+                mem_elem.text = str(new_kib)
+                mem_elem.set("unit", "KiB")
 
                 cur_elem = root.find("currentMemory")
                 if cur_elem is None:
-                    cur_elem = ET.SubElement(root, "currentMemory", unit="MiB")
-                cur_elem.text = str(changes.memory_mb)
+                    cur_elem = ET.SubElement(root, "currentMemory", unit="KiB")
+                cur_elem.text = str(new_kib)
+                cur_elem.set("unit", "KiB")
 
                 new_xml = ET.tostring(root).decode()
                 domain.undefine()

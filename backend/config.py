@@ -1,4 +1,4 @@
-VM_IMAGE_DIR = "/home/eli/Downloads"
+VM_IMAGE_DIR = "/home/eli/virtual_machine_images/"
 
 STATE_NAMES = {
     0: "No State",
