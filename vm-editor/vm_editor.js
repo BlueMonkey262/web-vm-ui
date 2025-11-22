@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                      if (disks.length === 0) {
                          const opt = document.createElement('option');
                          opt.value = '';
-                         opt.textContent = 'No known disk images';
+                         opt.textContent = 'No available disk images on server';
                          diskSelect.appendChild(opt);
                      } else {
                          // helper to display the filename part and preserve the extension
@@ -264,34 +264,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                          disks.forEach(d => {
                              const opt = document.createElement('option');
-                             opt.value = d;
+                             opt.value = d;       // full path returned by backend (in VM_IMAGE_DIR)
                              opt.textContent = displayFilename(d);
                              diskSelect.appendChild(opt);
                          });
                      }
-                     // Add a Custom option
-                     const sep = document.createElement('option');
-                     sep.value = '__custom__';
-                     sep.textContent = 'Custom path...';
-                     diskSelect.appendChild(sep);
 
-                     // If VM object carries a "primary" disk, try to select it
+                     // If VM object carries a "primary" disk, try to select it (matching by filename if necessary)
                      if (vm.disk_path) {
-                         diskSelect.value = vm.disk_path;
-                     } else if (disks.length > 0) {
+                         // try an exact match first, otherwise try matching by basename
+                         const trySet = (val) => {
+                             if (!val) return false;
+                             for (let i=0;i<diskSelect.options.length;i++){
+                                 if (diskSelect.options[i].value === val) { diskSelect.selectedIndex = i; return true; }
+                             }
+                             return false;
+                         };
+                         if (!trySet(vm.disk_path)) {
+                             const base = (vm.disk_path||'').split('/').pop();
+                             if (base) trySet(base);
+                         }
+                     } else if (diskSelect.options.length > 0) {
                          diskSelect.selectedIndex = 0;
                      }
 
-                     // Show/hide custom input when custom selected
-                     function updateDiskCustomVisibility() {
-                         if (diskSelect.value === '__custom__') {
-                             diskCustom.style.display = 'block';
-                         } else {
-                             diskCustom.style.display = 'none';
-                         }
-                     }
-                     diskSelect.addEventListener('change', updateDiskCustomVisibility);
-                     updateDiskCustomVisibility();
+                     // No custom option is provided; ensure custom input is hidden
+                     if (diskCustom) diskCustom.style.display = 'none';
 
                      resultDiv.innerText = '';
                  })
@@ -312,9 +310,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             vcpus: Number(vcpuNumber.value)
         };
 
-        // If disk changed and not empty, include it in a "disk_path" field so backend (if it supports it) can use it.
-        let diskPath = diskSelect.value;
-        if (diskPath === '__custom__') diskPath = diskCustom.value.trim();
+        // Only accept disk selections provided by server (no custom free-form paths)
+        const diskPath = diskSelect.value;
         if (diskPath) payload.disk_path = diskPath;
 
         try {
